@@ -40,7 +40,10 @@ docker info
    ```bash
    sudo usermod -aG docker $USER
    ```
-
+** without reboot
+```bash
+sudo usermod -aG docker $USER && newgrp docker
+```
 2. Reboot your system:
    ```bash
    sudo reboot
