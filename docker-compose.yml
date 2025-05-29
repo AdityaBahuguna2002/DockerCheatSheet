@@ -1,0 +1,62 @@
+# docker-compose.yml  file with 3 tier aplication - with next.js App, MySql DB, PhpMyAdmin for Sql Data
+# in Docker compose v2 | without version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: cynoteck-app
+    ports:
+      - "3000:3000"   # port host --> container
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USERNAME=root
+      - DB_PASSWORD=Cyno@123#45
+      - DB_NAME=cynoteck_test
+    depends_on:
+      - mysql
+    networks:
+      - cyno-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=Cyno@123#45
+      - MYSQL_DATABASE=cynoteck_test
+    ports:
+      - "3306:3306"   # port host --> container
+    volumes:
+      - mysql-data:/var/lib/mysql    # Host side: mysql-data is a named volume (managed by Docker)
+      # Container side: /var/lib/mysql is the directory inside the MySQL container where MySQL stores its database files.
+      - ./cynoteck_test.sql:/docker-entrypoint-initdb.d/db.sql   # import sql file in mysql db 
+      # Host side: ./cynoteck_test.sql - location of Sql file, located in the same directory as the Docker Compose file.
+      # Container side: /docker-entrypoint-initdb.d/db.sql - special directory used by the official MySQL Docker image.  
+    networks:
+      - cyno-network
+  
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+    ports:
+      - "9090:80"   # Port host --> container
+    environment:
+      - PMA_HOST=mysql
+      - PMA_PORT=3306
+      - MYSQL_ROOT_PASSWORD=Cyno@123#45
+    depends_on:
+      - mysql
+    networks:
+      - cyno-network
+volumes:
+  mysql-data:
+
+networks:
+  cyno-network:
+    driver: bridge
